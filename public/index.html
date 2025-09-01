@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>定向越野队训练打卡系统</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-map-marked-alt"></i> 定向越野队训练打卡系统</h1>
+            <div class="user-info" id="userInfo" style="display: none;">
+                <span>欢迎，<span id="currentUser"></span></span>
+                <button onclick="logout()" class="btn-logout"><i class="fas fa-sign-out-alt"></i> 退出</button>
+            </div>
+        </header>
+
+        <!-- 登录页面 -->
+        <div id="loginPage" class="page">
+            <div class="login-container">
+                <h2><i class="fas fa-user"></i> 用户登录</h2>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="username">用户名</label>
+                        <input type="text" id="username" name="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">密码</label>
+                        <input type="password" id="password" name="password" required>
+                    </div>
+                    <button type="submit" class="btn-primary"><i class="fas fa-sign-in-alt"></i> 登录</button>
+                </form>
+                <div class="login-tips">
+                    <p><strong>测试账号：</strong></p>
+                    <p>普通用户：测试用户 / 123456</p>
+                    <p>管理员：管理员 / admin123</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 用户打卡页面 -->
+        <div id="userPage" class="page" style="display: none;">
+            <div class="card">
+                <h2><i class="fas fa-tasks"></i> 今日打卡事项</h2>
+                <div class="current-info">
+                    <p><strong>日期：</strong><span id="currentDate"></span></p>
+                    <p><strong>时间：</strong><span id="currentTime"></span></p>
+                </div>
+                <div id="todayTasks" class="tasks-list"></div>
+            </div>
+            
+            <div class="card">
+                <h3><i class="fas fa-history"></i> 我的打卡记录</h3>
+                <div id="userCheckins" class="checkins-list"></div>
+            </div>
+        </div>
+
+        <!-- 训练心得打卡模态框 -->
+        <div id="checkinModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeCheckinModal()">&times;</span>
+                <h2><i class="fas fa-edit"></i> 训练打卡</h2>
+                <div id="checkinTaskInfo" style="margin-bottom: 20px; padding: 15px; background: rgb(241, 248, 237); border-radius: 5px;">
+                    <h4 id="checkinTaskTitle" style="color: rgb(7, 119, 61); margin-bottom: 10px;"></h4>
+                    <p id="checkinTaskDesc" style="color: rgb(7, 119, 61); margin: 5px 0;"></p>
+                    <p id="checkinTaskDate" style="color: rgb(7, 119, 61); margin: 5px 0;"></p>
+                </div>
+                <form id="checkinForm">
+                    <input type="hidden" id="checkinTaskId">
+                    <div class="form-group">
+                        <label for="trainingNotes">训练心得</label>
+                        <textarea id="trainingNotes" rows="4" placeholder="请分享您的训练心得体会..."></textarea>
+                    </div>
+                    <button type="submit" class="btn-success">
+                        <i class="fas fa-check-circle"></i> 完成打卡
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 管理员页面 -->
+        <div id="adminPage" class="page" style="display: none;">
+            <div class="admin-tabs">
+                <button class="tab-btn active" onclick="showTab('tasksTab')">
+                    <i class="fas fa-tasks"></i> 发布打卡事项
+                </button>
+                <button class="tab-btn" onclick="showTab('dataTab')">
+                    <i class="fas fa-table"></i> 打卡数据管理
+                </button>
+                <button class="tab-btn" onclick="showTab('usersTab')">
+                    <i class="fas fa-users"></i> 用户管理
+                </button>
+            </div>
+
+            <!-- 发布事项标签页 -->
+            <div id="tasksTab" class="tab-content">
+                <div class="card">
+                    <h2><i class="fas fa-plus-circle"></i> 发布新打卡事项</h2>
+                    <form id="taskForm">
+                        <div class="form-group">
+                            <label for="taskTitle">事项标题</label>
+                            <input type="text" id="taskTitle" required placeholder="例如：晨跑训练">
+                        </div>
+                        <div class="form-group">
+                            <label for="taskDescription">事项描述</label>
+                            <textarea id="taskDescription" rows="3" placeholder="详细说明训练内容和要求..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="taskDate">事项日期</label>
+                            <input type="date" id="taskDate" required>
+                        </div>
+                        <button type="submit" class="btn-success">
+                            <i class="fas fa-paper-plane"></i> 发布事项
+                        </button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h3><i class="fas fa-list"></i> 已发布事项</h3>
+                    <div id="tasksList" class="tasks-list"></div>
+                </div>
+            </div>
+
+            <!-- 数据管理标签页 -->
+            <div id="dataTab" class="tab-content" style="display: none;">
+                <div class="card">
+                    <h2><i class="fas fa-filter"></i> 数据筛选</h2>
+                    <div class="filter-form">
+                        <div class="form-group">
+                            <label for="filterUser">用户</label>
+                            <select id="filterUser">
+                                <option value="">全部用户</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="startDate">开始日期</label>
+                            <input type="date" id="startDate">
+                        </div>
+                        <div class="form-group">
+                            <label for="endDate">结束日期</label>
+                            <input type="date" id="endDate">
+                        </div>
+                        <button onclick="loadCheckins()" class="btn-primary">
+                            <i class="fas fa-search"></i> 查询
+                        </button>
+                        <button onclick="exportData()" class="btn-secondary">
+                            <i class="fas fa-download"></i> 导出
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3><i class="fas fa-list"></i> 打卡记录列表</h3>
+                    <div class="table-container">
+                        <table id="checkinsTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>用户</th>
+                                    <th>日期</th>
+                                    <th>时间</th>
+                                    <th>打卡事项</th>
+                                    <th>训练心得</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="checkinsTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 用户管理标签页 -->
+            <div id="usersTab" class="tab-content" style="display: none;">
+                <div class="card">
+                    <h2><i class="fas fa-user-plus"></i> 添加新用户</h2>
+                    <form id="addUserForm">
+                        <div class="form-group">
+                            <label for="newUsername">用户名</label>
+                            <input type="text" id="newUsername" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="newPassword">密码</label>
+                            <input type="password" id="newPassword" required>
+                        </div>
+                        <button type="submit" class="btn-success">
+                            <i class="fas fa-plus"></i> 添加用户
+                        </button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h3><i class="fas fa-users"></i> 用户列表</h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>用户名</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑打卡记录的模态框 -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditModal()">&times;</span>
+            <h2><i class="fas fa-edit"></i> 编辑打卡记录</h2>
+            <form id="editForm">
+                <input type="hidden" id="editId">
+                <div class="form-group">
+                    <label for="editDate">日期</label>
+                    <input type="date" id="editDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="editTime">时间</label>
+                    <input type="time" id="editTime" required>
+                </div>
+                <div class="form-group">
+                    <label for="editLocation">地点</label>
+                    <input type="text" id="editLocation">
+                </div>
+                <div class="form-group">
+                    <label for="editNotes">训练心得</label>
+                    <textarea id="editNotes" rows="3"></textarea>
+                </div>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-save"></i> 保存修改
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
